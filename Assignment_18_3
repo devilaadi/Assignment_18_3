@@ -1,0 +1,101 @@
+
+//user_id, src, dest, travel_mode, distance, year_of_travel
+val travel = sc.textFile("file:///home/cloudera/Desktop/Acadgild/Assignment_18_1/S18_Dataset_Holidays.txt")
+
+val travelRDD  = travel.map(x=> {
+
+ val w = x.split(",")
+ val user_id = w(0)
+ val src = w(1)
+ val dest = w(2)
+ val travel_mode = w(3)
+ val distance = w(4).toInt
+ val year_of_travel = w(5).toInt
+ 
+ (user_id,src,dest,travel_mode,distance,year_of_travel)
+})
+
+
+//travel_mode, cost_per_unit
+val transport = sc.textFile("file:///home/cloudera/Desktop/Acadgild/Assignment_18_1/S18_Dataset_Transport.txt")
+
+val transportRDD = transport.map(x=> {
+ val w = x.split(",")
+ val travel_mode = w(0) 
+ val cost_per_unit = w(1).toInt
+ (travel_mode,cost_per_unit)
+})
+
+
+
+//user_id,name,age
+val user = sc.textFile("file:///home/cloudera/Desktop/Acadgild/Assignment_18_1/S18_Dataset_User_details.txt")
+
+val userRDD = user.map(x=> {
+ val w = x.split(",")
+ val user_id = w(0)
+ val name = w(1)
+ val age = w(2).toInt
+ (user_id,name,age)
+})
+
+
+val f3 = userRDD.map(x => x._1 -> {
+
+if(x._3 < 20)
+
+"<20"
+
+else if (x._3 > 35)
+
+">35"
+
+else "20-35"
+})
+
+--1) Considering age groups of < 20 , 20-35, 35 > ,Which age group spends the most amount of money travelling.
+
+val f1 = travelRDD.map(x => x._4 -> (x._1, x._5, x._6))
+
+val f2 = transportRDD.map(x => x._1 -> x._2)
+
+val jtwo = f1.join(f2)
+
+val trans = jtwo.map(x => (x._2._1._1, x._2._1._3) -> (x._2._1._2 * x._2._2))
+
+val transMap = trans.map(x => (x._1._1) -> x._2)
+
+val j = f3.join(transMap)
+
+val finalTrans = j.map(x => (x._2._1) -> (x._2._2))
+
+val grp = finalTrans.groupByKey()
+
+val output= grp.map(x => x._1 -> x._2.sum)
+
+val result = output.sortBy(x => -x._2).first()
+
+
+
+--2) What is the amount spent by each age-group, every year in travelling?
+
+val f1 = travelRDD.map(x => x._4 -> (x._1, x._5, x._6))
+
+val f2 = transportRDD.map(x => x._1 -> x._2)
+
+val jtwo = f1.join(f2)
+
+val trans = jtwo.map(x => (x._2._1._1, x._2._1._3) -> (x._2._1._2 * x._2._2))
+
+val transMap = trans.map(x => (x._1._1) -> x._2)
+
+val j = f3.join(transMap)
+
+val finalTrans = j.map(x => (x._2._1) -> (x._2._2))
+
+val grp = finalTrans.groupByKey()
+
+val output= grp.map(x => x._1 -> x._2.sum).collect
+
+
+
